@@ -21,10 +21,11 @@ router.post("/login", authCtrl.login);
 // ADMIN ROUTS
 router.get("/usersList", authAdmin, adminCtrl.getUsersList);
 router.delete("/:id", authAdmin, adminCtrl.deleteUser);
+router.patch("/changeRole/:id/:role", authAdmin, adminCtrl.changeRole);
 
 // USER ROUTS
 router.put("/editInfo", auth, userCtrl.editUserInfo);
-router.patch("/changeRole/:id/:role", authAdmin, adminCtrl.changeRole);
+router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
 router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
 
 module.exports = router;

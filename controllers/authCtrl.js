@@ -1,4 +1,9 @@
-const { validateUser, UserModel, validateLogin, createToken } = require("../models/userModel");
+const {
+  validateUser,
+  UserModel,
+  validateLogin,
+  createToken,
+} = require("../models/userModel");
 const bcrypt = require("bcrypt");
 
 exports.authCtrl = {
@@ -15,11 +20,13 @@ exports.authCtrl = {
       res.status(201).json(user);
     } catch (err) {
       if (err.code == 11000) {
-        return res
-          .status(401)
-          .json({ err: "Email already in system", code: 11000 });
+        console.log(err);
+        return res.status(401).json({
+          errMsg: "Email or Phone or userName already in system",
+          code: 11000,
+          err: err,
+        });
       }
-      console.log(err);
       res.status(502).json({ err });
     }
   },

@@ -7,6 +7,7 @@ const { config } = require("../config/secret");
 const userSchema = new mongoose.Schema(
   {
     profileImage: String,
+    adentification: String,
     email: String,
     phone: String,
     fullname: String,
@@ -90,12 +91,13 @@ exports.createToken = (user_id, role = "user") => {
 exports.validateUser = (_reqBody) => {
   const joiSchema = Joi.object({
     profileImage: Joi.string().uri(),
-    email: Joi.string().email().required(),
+    adentification: Joi.string().required(),
+    email: Joi.string().email(),
     phone: Joi.string(),
-    fullname: Joi.string().min(2).max(150),
-    password: Joi.string().min(3).max(150).required(),
-    birthday: Joi.date(),
-    username: Joi.string(),
+    fullname: Joi.string().min(2).max(150).required(),
+    password: Joi.string().min(6).max(150).required(),
+    birthday: Joi.date().required(),
+    username: Joi.string().required(),
     bio: Joi.string(),
     category: Joi.string(),
     website: Joi.string().uri(),

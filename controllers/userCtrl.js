@@ -75,4 +75,33 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  checkParameter: async (req, res) => {
+    const { key, value } = req.params;
+    try {
+      // check wat is type the we want to check if is exists
+      let user;
+      if (key === "username") {
+        user = await UserModel.findOne({ username: value });
+      } else if (key === "email") {
+        user = await UserModel.findOne({ email: value });
+      } else if (key === "phone") {
+        user = await UserModel.findOne({ phone: value });
+      } else {
+        return res.json({
+          msg: "You need to send only this keys : 'username' or 'email' or 'phone' ",
+        });
+      }
+
+      if (user) {
+        // Parameter exists
+        res.json({ exists: true });
+      } else {
+        // Parameter doesn't exist
+        res.json({ exists: false });
+      }
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
 };
