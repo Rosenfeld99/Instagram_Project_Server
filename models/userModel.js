@@ -6,15 +6,29 @@ const { config } = require("../config/secret");
 
 const userSchema = new mongoose.Schema(
   {
-    profileImage: String,
+    profileImage: {
+      type: String,
+      default:
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
+    },
     adentification: String,
     email: String,
     phone: String,
     fullname: String,
     password: String,
-    birthday: String,
+    birthday: {
+      day: {
+        name: String,
+      },
+      month: {
+        name: String,
+      },
+      year: {
+        name: String,
+      },
+    },
     username: String,
-    bio: String,
+    bio: { type: String, default: "" },
     category: String,
     website: String,
     role: { type: String, default: "user" },
@@ -92,13 +106,33 @@ exports.validateUser = (_reqBody) => {
   const joiSchema = Joi.object({
     profileImage: Joi.string().uri(),
     adentification: Joi.string().required(),
-    email: Joi.string().email(),
-    phone: Joi.string(),
+    email: Joi.string()
+      .email()
+      .allow(null || ""),
+    phone: Joi.string().allow(null || ""),
     fullname: Joi.string().min(2).max(150).required(),
     password: Joi.string().min(6).max(150).required(),
-    birthday: Joi.date().required(),
+    birthday: Joi.object()
+      .keys({
+        day: Joi.object()
+          .keys({
+            name: Joi.string().required(),
+          })
+          .required(),
+        month: Joi.object()
+          .keys({
+            name: Joi.string().required(),
+          })
+          .required(),
+        year: Joi.object()
+          .keys({
+            name: Joi.string().required(),
+          })
+          .required(),
+      })
+      .required(),
     username: Joi.string().required(),
-    bio: Joi.string(),
+    bio: Joi.string().allow(null || ""),
     category: Joi.string(),
     website: Joi.string().uri(),
     gender: Joi.string().allow(null || ""),
@@ -179,7 +213,7 @@ exports.validateEditUser = (_reqBody) => {
 
 exports.validateLogin = (_reqBody) => {
   const joiSchema = Joi.object({
-    email: Joi.string().min(2).max(200).email().required(),
+    adentification: Joi.string().min(2).max(200).required(),
     password: Joi.string().min(3).max(150).required(),
   });
 

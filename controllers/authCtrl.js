@@ -36,22 +36,32 @@ exports.authCtrl = {
       return res.status(400).json(validBody.error.details);
     }
     try {
-      const user = await UserModel.findOne({ email: req.body.email });
+      const user = await UserModel.findOne({
+        adentification: req.body.adentification,
+      });
+
       if (!user) {
-        return res.status(401).json({ err: "Email or password wrong" });
+        return res
+          .status(401)
+          .json({ error: "Email or password is incorrect." });
       }
+
       const passwordValid = await bcrypt.compare(
         req.body.password,
         user.password
       );
+
       if (!passwordValid) {
-        return res.status(401).json({ err: "Email or password wrong!" });
+        return res
+          .status(401)
+          .json({ error: "Email or password is incorrect." });
       }
+
       const token = createToken(user._id, user.role);
       res.json({ token, role: user.role });
     } catch (err) {
-      console.log(err);
-      res.status(502).json({ err });
+      console.error("Authentication Error:", err);
+      res.status(500).json({ error: "Authentication failed." });
     }
   },
 };
