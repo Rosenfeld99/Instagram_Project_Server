@@ -104,4 +104,32 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  changeTheme: async (req, res) => {
+    const { mode } = req.params;
+    try {
+      // Find the user by ID
+      const user = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (mode !== "light" && mode !== "dark") {
+        return res.json({ error: "You need to send only light or dark theme" });
+      }
+      console.log(mode);
+      user.theme = mode;
+      console.log(user);
+      await user.save()
+
+      res.json({user, msg: `theme change seccess full to ${mode}` });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
 };

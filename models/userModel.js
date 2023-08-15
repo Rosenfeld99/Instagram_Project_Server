@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema(
     website: String,
     role: { type: String, default: "user" },
     gender: { type: String, default: "" },
+    theme: { type: String, default: "light" },
     following: [String],
     followers: [String],
     posts: [
@@ -136,6 +137,8 @@ exports.validateUser = (_reqBody) => {
     category: Joi.string(),
     website: Joi.string().uri(),
     gender: Joi.string().allow(null || ""),
+    theme: Joi.string(),
+    role: Joi.string(),
     following: Joi.array().items(Joi.string()),
     followers: Joi.array().items(Joi.string()),
     posts: Joi.array().items(

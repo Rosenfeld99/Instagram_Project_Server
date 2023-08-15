@@ -26,6 +26,7 @@ router.patch("/changeRole/:id/:role", authAdmin, adminCtrl.changeRole);
 // USER ROUTS
 router.put("/editInfo", auth, userCtrl.editUserInfo);
 router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
+router.patch("/change-theme/:mode",auth, userCtrl.changeTheme);
 router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
 
 module.exports = router;
