@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
-// ספרייה שיודעת לייצר ולנהל טוקנים
 const jwt = require("jsonwebtoken");
 const { config } = require("../config/secret");
 
@@ -34,8 +33,8 @@ const userSchema = new mongoose.Schema(
     role: { type: String, default: "user" },
     gender: { type: String, default: "" },
     theme: { type: String, default: "light" },
-    following: [String],
-    followers: [String],
+    following: [Object],
+    followers: [Object],
     posts: [
       {
         images: [
@@ -93,10 +92,6 @@ const userSchema = new mongoose.Schema(
 exports.UserModel = mongoose.model("users", userSchema);
 
 exports.createToken = (user_id, role = "user") => {
-  // מייצרים טוקן
-  // פרמטר ראשון התכולה של הטוקן ,כרגע איי די בהמשך יהיה גם רול/תפקיד
-  // פרמטר שני - מילה סודית בשביל לפענח את הטוקן
-  // פרמטר שלישי תוקף הטוקן
   const token = jwt.sign({ _id: user_id, role }, config.TOKEN_SECRET, {
     expiresIn: "60000mins",
   });
@@ -139,8 +134,8 @@ exports.validateUser = (_reqBody) => {
     gender: Joi.string().allow(null || ""),
     theme: Joi.string(),
     role: Joi.string(),
-    following: Joi.array().items(Joi.string()),
-    followers: Joi.array().items(Joi.string()),
+    following: Joi.array().items(Joi.object()),
+    followers: Joi.array().items(Joi.object()),
     posts: Joi.array().items(
       Joi.object({
         images: Joi.array().items(

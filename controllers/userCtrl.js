@@ -13,6 +13,47 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  getSuggestedAccounts: async (req, res) => {
+    try {
+      // משתמשים מסודרים לפי כמות העוקבים בסדר יורדי
+      const data = await UserModel.find({}, { password: 0 })
+        .sort({ followers: -1 }) // מיון עוקבים בסדר יורדי
+        .limit(15); // הגבלה ל-15 תוצאות
+
+      res.json(data);
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getUserByUserName: async (req, res) => {
+    try {
+      const { userName } = req.params;
+
+      // Find the user by UserName
+      const user = await UserModel.findOne(
+        { username: userName },
+        {
+          password: 0,
+          __v: 0,
+          updatedAt: 0,
+          role: 0,
+          adentification: 0,
+          theme: 0,
+          gender: 0,
+        }
+      );
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
   editUserInfo: async (req, res) => {
     const validBody = validateEditUser(req.body);
     if (validBody.error) {
@@ -124,9 +165,9 @@ exports.userCtrl = {
       console.log(mode);
       user.theme = mode;
       console.log(user);
-      await user.save()
+      await user.save();
 
-      res.json({user, msg: `theme change seccess full to ${mode}` });
+      res.json({ user, msg: `theme change seccess full to ${mode}` });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

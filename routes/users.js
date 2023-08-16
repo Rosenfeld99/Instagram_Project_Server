@@ -14,7 +14,6 @@ router.get("/checkToken", auth, async (req, res) => {
 });
 
 // AUTH ROUTS
-router.get("/userInfo", auth, userCtrl.getUserInfo);
 router.post("/", authCtrl.register);
 router.post("/login", authCtrl.login);
 
@@ -24,6 +23,9 @@ router.delete("/:id", authAdmin, adminCtrl.deleteUser);
 router.patch("/changeRole/:id/:role", authAdmin, adminCtrl.changeRole);
 
 // USER ROUTS
+router.get("/userInfo", auth, userCtrl.getUserInfo);
+router.get("/:userName", auth, userCtrl.getUserByUserName);
+router.get("/suggested-accounts", auth, userCtrl.getSuggestedAccounts);
 router.put("/editInfo", auth, userCtrl.editUserInfo);
 router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
 router.patch("/change-theme/:mode",auth, userCtrl.changeTheme);
