@@ -24,11 +24,11 @@ router.patch("/changeRole/:id/:role", authAdmin, adminCtrl.changeRole);
 
 // USER ROUTS
 router.get("/userInfo", auth, userCtrl.getUserInfo);
-router.get("/:userName", auth, userCtrl.getUserByUserName);
-router.get("/suggested-accounts", auth, userCtrl.getSuggestedAccounts);
+router.get("/getUserByUserName/:userName", auth, userCtrl.getUserByUserName);
+router.get("/suggestedAccounts", userCtrl.getSuggestedAccounts);
 router.put("/editInfo", auth, userCtrl.editUserInfo);
 router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
-router.patch("/change-theme/:mode",auth, userCtrl.changeTheme);
+router.patch("/change-theme/:mode", auth, userCtrl.changeTheme);
 router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
 
 module.exports = router;
