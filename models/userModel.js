@@ -28,8 +28,8 @@ const userSchema = new mongoose.Schema(
     },
     username: String,
     bio: { type: String, default: "" },
-    category: String,
-    website: String,
+    category: { type: String, default: "" },
+    website: { type: String, default: "" },
     role: { type: String, default: "user" },
     gender: { type: String, default: "" },
     theme: { type: String, default: "light" },
@@ -192,18 +192,12 @@ exports.validateUser = (_reqBody) => {
 
 exports.validateEditUser = (_reqBody) => {
   const joiSchema = Joi.object({
-    profileImage: Joi.string().uri(),
-    email: Joi.string().email().required(),
-    phone: Joi.string(),
-    fullname: Joi.string().min(2).max(150),
-    password: Joi.string().min(3).max(150),
-    birthday: Joi.date(),
-    username: Joi.string(),
-    bio: Joi.string(),
-    category: Joi.string(),
-    website: Joi.string().uri(),
+    bio: Joi.string().allow(null || ""),
+    category: Joi.string().allow(null || ""),
+    website: Joi.string()
+      .uri()
+      .allow(null || ""),
     gender: Joi.string().allow(null || ""),
-    role: Joi.string(),
   });
 
   return joiSchema.validate(_reqBody);

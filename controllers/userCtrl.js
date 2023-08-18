@@ -29,38 +29,75 @@ exports.userCtrl = {
   getUserByUserName: async (req, res) => {
     try {
       const { userName } = req.params;
+      const userId = req.tokenData._id;
 
       // Find the user by UserName
       const user = await UserModel.findOne(
         { username: userName },
-        {
-          password: 0,
-          __v: 0,
-          updatedAt: 0,
-          role: 0,
-          adentification: 0,
-          theme: 0,
-          gender: 0,
-        }
+        { password: 0 }
       );
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      res.json({ user });
+      // Check if the requested user is the same as the logged-in user
+      const isSameUser = user._id.toString() === userId.toString();
+
+      if (isSameUser) {
+        res.json({ user, type: "personale" });
+      } else {
+        // Filtered user for other users
+        const filteredUser = {
+          ...user.toObject(),
+          password: undefined,
+          role: undefined,
+          adentification: undefined,
+          theme: undefined,
+          gender: undefined,
+        };
+        res.json({ user: filteredUser, type: "another" });
+      }
     } catch (err) {
       console.log(err);
-      res.status(502).json({ err });
+      res.status(500).json({ err });
     }
   },
+  // getUserByUserName: async (req, res) => {
+  //   try {
+  //     const { userName } = req.params;
+
+  //     // Find the user by UserName
+  //     const user = await UserModel.findOne(
+  //       { username: userName },
+  //       {
+  //         password: 0,
+  //         __v: 0,
+  //         updatedAt: 0,
+  //         role: 0,
+  //         adentification: 0,
+  //         theme: 0,
+  //         gender: 0,
+  //       }
+  //     );
+
+  //     if (!user) {
+  //       return res.status(404).json({ error: "User not found" });
+  //     }
+
+  //     res.json({ user });
+  //   } catch (err) {
+  //     console.log(err);
+  //     res.status(502).json({ err });
+  //   }
+  // },
   editUserInfo: async (req, res) => {
     const validBody = validateEditUser(req.body);
     if (validBody.error) {
       return res.status(400).json(validBody.error.details);
     }
     try {
-      const { gender, bio } = req.body;
+      const { gender, bio, category, website } = req.body;
 
       // Find the user by ID
       const user = await UserModel.findById(req.tokenData._id, {
@@ -77,22 +114,37 @@ exports.userCtrl = {
         gender !== "Male" &&
         gender !== "Female" &&
         gender !== "Custom" &&
-        gender !== "Prefer not to say"
+        gender !== "Prefer not to say" &&
+        gender !== ""
       ) {
         return res.status(400).json({
           error:
             "You need to send gender only : 'Male' or 'Female' or 'Custom' or 'Prefer not to say'",
         });
       }
+      const oldGender = user.gender;
+      const oldBio = user.bio;
+      const oldCategory = user.category;
+      const oldWebsite = user.website;
+
+      // Check if content has changed
 
       // Update user's bio and gender
       user.bio = bio || user.bio;
+      user.category = category || user.category;
+      user.website = website || user.website;
       user.gender = gender || user.gender;
+
+      const contentChanged =
+        oldGender !== user.gender ||
+        oldBio !== user.bio ||
+        oldCategory !== user.category ||
+        oldWebsite !== user.website;
 
       // Save the changes to the database
       await user.save();
 
-      res.json(user);
+      res.json({ user, modifyCount: contentChanged ? 1 : 0 });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

@@ -1,11 +1,9 @@
 const express = require("express");
 const cloudinary = require("cloudinary").v2;
-const { ProductModel } = require("../models/productModel");
+const { UserModel } = require("../models/userModel");
 const { auth } = require("../middlewares/auth");
 const router = express.Router();
 
-// בפרוייקט אמיתי הערכים של המשתנים צריכים להיות ב
-// .ENV
 // Configuration
 cloudinary.config({
   cloud_name: "djwetaeqt",
@@ -13,11 +11,7 @@ cloudinary.config({
   api_secret: "K5CU1ZPpgU87bqvrd98_mxF-T38",
 });
 
-router.get("/", async (req, res) => {
-  res.json({ msg: "Upload work" });
-});
-
-router.post("/product/:id", auth, async (req, res) => {
+router.post("/profileImage", auth, async (req, res) => {
   try {
     const myFile = req.body.myFile;
     if (myFile) {
@@ -25,16 +19,19 @@ router.post("/product/:id", auth, async (req, res) => {
       const data = await cloudinary.uploader.upload(myFile, {
         unique_filename: true,
       });
-      // console.log(myFile);
+      console.log(myFile);
       // יחזיר פרטים על התמונה שנמצאת בשרת כולל הכתובת שלה
       // ב secure_url
-      const id = req.params.id;
-      // מעדכנים במסד את היו אר אל של התמונה שעלתה לקלאוד
-      const dataProduct = await ProductModel.updateOne(
-        { _id: id, user_id: req.tokenData._id },
-        { img_url: data.secure_url }
-      );
-      res.json(dataProduct);
+      const user = await UserModel.findById(req.tokenData._id);
+      if (!user) {
+        return res.json({ error: " user not found" });
+      } // מעדכנים במסד את היו אר אל של התמונה שעלתה לקלאוד
+      console.log(data.secure_url);
+      console.log(user);
+      user.profileImage = data.secure_url;
+
+      await user.save();
+      res.json({ user });
     }
   } catch (err) {
     console.log(err);
@@ -42,42 +39,34 @@ router.post("/product/:id", auth, async (req, res) => {
   }
 });
 
-router.post("/cloud_server", async (req, res) => {
-  try {
-    const myFile = req.body.myFile;
-    if (myFile) {
-      // מעלה את התמונה לקלואדינרי
-      const data = await cloudinary.uploader.upload(myFile, {
-        unique_filename: true,
-      });
-      // console.log(myFile);
-      // יחזיר פרטים על התמונה שנמצאת בשרת כולל הכתובת שלה
-      // ב secure_url
-      res.json(data);
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(502).json({ err });
-  }
-});
+// router.post("/upload-profile-image", auth, async (req, res) => {
+//   try {
+//     const userId = req.tokenData._id;
+//     const myFile = req.body.myFile;
+//     console.log(myFile);
 
-router.post("/cloud1", async (req, res) => {
-  try {
-    const myFile = req.files.myFile;
-    if (myFile) {
-      // מעלה את התמונה לקלואדינרי
-      const data = await cloudinary.uploader.upload(myFile.tempFilePath, {
-        unique_filename: true,
-      });
-      // console.log(myFile);
-      // יחזיר פרטים על התמונה שנמצאת בשרת כולל הכתובת שלה
-      // ב secure_url
-      res.json(data);
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(502).json({ err });
-  }
-});
+//     if (!myFile) {
+//       return res.status(400).json({ error: "No file provided" });
+//     }
+
+//     // Upload the image to Cloudinary
+//     const uploadedImage = await cloudinary.uploader.upload(myFile, {
+//       folder: "profile-images", // Specify the folder in Cloudinary
+//       unique_filename: true,
+//     });
+
+//     // Update the user's profile image URL in the database
+//     const updatedUser = await UserModel.findOneAndUpdate(
+//       { _id: userId },
+//       { profileImage: uploadedImage.secure_url },
+//       { new: true }
+//     );
+
+//     res.json(updatedUser);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Error uploading profile image" });
+//   }
+// });
 
 module.exports = router;
