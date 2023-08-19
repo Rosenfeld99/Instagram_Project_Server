@@ -7,8 +7,7 @@ const userSchema = new mongoose.Schema(
   {
     profileImage: {
       type: String,
-      default:
-        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
+      default: "",
     },
     adentification: String,
     email: String,
@@ -100,7 +99,9 @@ exports.createToken = (user_id, role = "user") => {
 
 exports.validateUser = (_reqBody) => {
   const joiSchema = Joi.object({
-    profileImage: Joi.string().uri(),
+    profileImage: Joi.string()
+      .uri()
+      .allow(null || ""),
     adentification: Joi.string().required(),
     email: Joi.string()
       .email()

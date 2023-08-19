@@ -26,8 +26,8 @@ router.post("/profileImage", auth, async (req, res) => {
       if (!user) {
         return res.json({ error: " user not found" });
       } // מעדכנים במסד את היו אר אל של התמונה שעלתה לקלאוד
-      console.log(data.secure_url);
-      console.log(user);
+      // console.log(data.secure_url);
+      // console.log(user);
       user.profileImage = data.secure_url;
 
       await user.save();

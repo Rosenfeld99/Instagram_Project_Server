@@ -150,6 +150,31 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  remodeCurrentPhoto: async (req, res) => {
+    try {
+      // Find the user by ID
+      const user = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update user's userPhoto to be default image user
+      user.profileImage = "";
+
+      // Save the changes to the database
+      await user.save();
+
+      res.json({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
   upDateFavs: async (req, res) => {
     try {
       // בדוק שהבאדי שלך פאבס איי אר שהוא מערך
