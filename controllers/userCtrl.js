@@ -1,4 +1,6 @@
-const { UserModel, validateEditUser } = require("../models/userModel");
+const { UserModel } = require("../models/userModel");
+const { validateEditUser } = require("../validation/validateEditUser");
+const { validatePost } = require("../validation/validatePost");
 
 exports.userCtrl = {
   getUserInfo: async (req, res) => {
@@ -63,34 +65,6 @@ exports.userCtrl = {
       res.status(500).json({ err });
     }
   },
-  // getUserByUserName: async (req, res) => {
-  //   try {
-  //     const { userName } = req.params;
-
-  //     // Find the user by UserName
-  //     const user = await UserModel.findOne(
-  //       { username: userName },
-  //       {
-  //         password: 0,
-  //         __v: 0,
-  //         updatedAt: 0,
-  //         role: 0,
-  //         adentification: 0,
-  //         theme: 0,
-  //         gender: 0,
-  //       }
-  //     );
-
-  //     if (!user) {
-  //       return res.status(404).json({ error: "User not found" });
-  //     }
-
-  //     res.json({ user });
-  //   } catch (err) {
-  //     console.log(err);
-  //     res.status(502).json({ err });
-  //   }
-  // },
   editUserInfo: async (req, res) => {
     const validBody = validateEditUser(req.body);
     if (validBody.error) {
@@ -175,6 +149,7 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+
   upDateFavs: async (req, res) => {
     try {
       // בדוק שהבאדי שלך פאבס איי אר שהוא מערך
@@ -245,6 +220,33 @@ exports.userCtrl = {
       await user.save();
 
       res.json({ user, msg: `theme change seccess full to ${mode}` });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  createPost: async (req, res) => {
+    const validBody = validatePost(req.body);
+    if (validBody.error) {
+      return res.status(400).json(validBody.error.details);
+    }
+    try {
+      const post = req.body;
+      // Find the user by ID
+      const user = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      user.posts.push(post);
+
+      await user.save();
+
+      res.json({ user });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

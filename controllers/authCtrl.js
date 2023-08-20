@@ -1,10 +1,7 @@
-const {
-  validateUser,
-  UserModel,
-  validateLogin,
-  createToken,
-} = require("../models/userModel");
+const { UserModel, createToken } = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const { validateLogin } = require("../validation/validateLogin");
+const { validateUser } = require("../validation/validateUser");
 
 exports.authCtrl = {
   register: async (req, res) => {
