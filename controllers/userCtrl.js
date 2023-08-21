@@ -226,6 +226,7 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  // --> is push new post bt on upload to couldinary is save image post in Blob url --> to all request go to uploads / createPost
   createPost: async (req, res) => {
     const validBody = validatePost(req.body);
     if (validBody.error) {
@@ -253,6 +254,7 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  // --> is push new story bt on upload to couldinary is save image story in Blob url --> to all request go to uploads / createPost
   createStory: async (req, res) => {
     const validBody = validateStory(req.body);
     if (validBody.error) {
@@ -273,6 +275,34 @@ exports.userCtrl = {
       user.stories.push(post);
 
       await user.save();
+
+      res.json({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  toggelFollow: async (req, res) => {
+    // const { mode } = req.params;
+    try {
+      // Find the user by ID
+      const user = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      //   if (mode !== "light" && mode !== "dark") {
+      //     return res.json({ error: "You need to send only light or dark theme" });
+      //   }
+      //   console.log(mode);
+      //   user.theme = mode;
+      //   console.log(user);
+      //   await user.save();
 
       res.json({ user });
     } catch (err) {
