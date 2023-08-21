@@ -1,6 +1,7 @@
 const { UserModel } = require("../models/userModel");
 const { validateEditUser } = require("../validation/validateEditUser");
 const { validatePost } = require("../validation/validatePost");
+const { validateStory } = require("../validation/validateStory");
 
 exports.userCtrl = {
   getUserInfo: async (req, res) => {
@@ -243,6 +244,33 @@ exports.userCtrl = {
         return res.status(404).json({ error: "User not found" });
       }
       user.posts.push(post);
+
+      await user.save();
+
+      res.json({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  createStory: async (req, res) => {
+    const validBody = validateStory(req.body);
+    if (validBody.error) {
+      return res.status(400).json(validBody.error.details);
+    }
+    try {
+      const post = req.body;
+      // Find the user by ID
+      const user = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      user.stories.push(post);
 
       await user.save();
 

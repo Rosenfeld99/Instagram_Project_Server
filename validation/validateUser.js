@@ -62,7 +62,7 @@ const validateUser = (_reqBody) => {
       Joi.object({
         url: Joi.string().uri(),
         alt: Joi.string(),
-        name: Joi.string(),
+        // name: Joi.string(),
       })
     ),
     reels: Joi.array().items(

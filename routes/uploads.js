@@ -2,6 +2,8 @@ const express = require("express");
 const cloudinary = require("cloudinary").v2;
 const { UserModel } = require("../models/userModel");
 const { auth } = require("../middlewares/auth");
+const { validateStory } = require("../validation/validateStory");
+const { validatePost } = require("../validation/validatePost");
 const router = express.Router();
 
 // Configuration
@@ -39,34 +41,72 @@ router.post("/profileImage", auth, async (req, res) => {
   }
 });
 
-// router.post("/upload-profile-image", auth, async (req, res) => {
-//   try {
-//     const userId = req.tokenData._id;
-//     const myFile = req.body.myFile;
-//     console.log(myFile);
+router.post("/createStory", auth, async (req, res) => {
+  const validBody = validateStory(req.body);
+  if (validBody.error) {
+    return res.status(400).json(validBody.error.details);
+  }
+  try {
+    const story = req.body;
+    // console.log(story);
+    const myFile = req.body.url;
+    if (myFile) {
+      // update to cloudinary
+      const data = await cloudinary.uploader.upload(myFile, {
+        unique_filename: true,
+      });
+      console.log("somthing");
+      // return information for image end url also
+      // ב secure_url
+      const user = await UserModel.findById(req.tokenData._id);
+      if (!user) {
+        return res.json({ error: " user not found" });
+      }
+      console.log(user);
+      story.url = data.secure_url;
+      user.stories.push(story);
 
-//     if (!myFile) {
-//       return res.status(400).json({ error: "No file provided" });
-//     }
+      await user.save();
+      res.json({ user });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(502).json({ err });
+  }
+});
 
-//     // Upload the image to Cloudinary
-//     const uploadedImage = await cloudinary.uploader.upload(myFile, {
-//       folder: "profile-images", // Specify the folder in Cloudinary
-//       unique_filename: true,
-//     });
+router.post("/createPost", auth, async (req, res) => {
+  const validBody = validatePost(req.body);
+  if (validBody.error) {
+    return res.status(400).json(validBody.error.details);
+  }
+  try {
+    const post = req.body;
+    // console.log(story);
+    const myFile = req.body.images[0].url;
+    if (myFile) {
+      console.log("somthing");
+      // update to cloudinary
+      const data = await cloudinary.uploader.upload(myFile, {
+        unique_filename: true,
+      });
+      // return information for image end url also
+      // ב secure_url
+      const user = await UserModel.findById(req.tokenData._id);
+      if (!user) {
+        return res.json({ error: " user not found" });
+      }
+      console.log(user);
+      post.images[0].url = data.secure_url;
+      user.posts.push(post);
 
-//     // Update the user's profile image URL in the database
-//     const updatedUser = await UserModel.findOneAndUpdate(
-//       { _id: userId },
-//       { profileImage: uploadedImage.secure_url },
-//       { new: true }
-//     );
-
-//     res.json(updatedUser);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Error uploading profile image" });
-//   }
-// });
+      await user.save();
+      res.json({ user });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(502).json({ err });
+  }
+});
 
 module.exports = router;

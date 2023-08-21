@@ -32,5 +32,6 @@ router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
 router.patch("/change-theme/:mode", auth, userCtrl.changeTheme);
 router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
 router.post("/createPost/", auth, userCtrl.createPost);
+router.post("/createStory/", auth, userCtrl.createStory);
 
 module.exports = router;

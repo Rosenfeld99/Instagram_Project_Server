@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
     category: { type: String, default: "" },
     website: { type: String, default: "" },
     role: { type: String, default: "user" },
-    gender: { type: String, default: "" },
+    gender: { type: String, default: "Prefer not to say" },
     theme: { type: String, default: "light" },
     following: [Object],
     followers: [Object],
@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema(
       {
         url: String,
         alt: String,
-        name: String,
+        // name: String,
         created: { type: Date, default: Date.now },
       },
     ],
