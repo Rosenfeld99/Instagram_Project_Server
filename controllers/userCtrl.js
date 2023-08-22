@@ -283,28 +283,77 @@ exports.userCtrl = {
     }
   },
   toggelFollow: async (req, res) => {
-    // const { mode } = req.params;
+    const userIdToToggleFollow = req.params.id; // Extract _id from req.params
+    console.log(userIdToToggleFollow);
+
     try {
-      // Find the user by ID
-      const user = await UserModel.findById(req.tokenData._id, {
+      // Find the current user by ID
+      const currentUser = await UserModel.findById(req.tokenData._id, {
         password: 0,
         __v: 0,
         updatedAt: 0,
+        createdAt : 0,
       });
 
-      if (!user) {
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      console.log(currentUser);
+
+      // Find the user to follow/unfollow by ID
+      const userToToggleFollow = await UserModel.findById(
+        userIdToToggleFollow,
+        {
+          password: 0,
+          __v: 0,
+          updatedAt: 0,
+          theme: 0,
+          adentification: 0,
+        }
+      );
+
+      if (!userToToggleFollow) {
+        return res
+          .status(404)
+          .json({ error: "User to follow/unfollow not found" });
+      }
+
+      // Check if the user is already being followed
+      const isFollowing = currentUser.following.includes(userIdToToggleFollow);
+
+      if (isFollowing) {
+        // Unfollow the user
+        currentUser.following = currentUser.following.filter(
+          (id) => id !== userIdToToggleFollow
+        );
+      } else {
+        // Follow the user
+        currentUser.following.push(userIdToToggleFollow);
+      }
+
+      await currentUser.save();
+
+      res.json({ user: currentUser });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getFollowingList: async (req, res) => {
+    try {
+      const userId = req.params.userId;
+
+      const currentUser = await UserModel.findById(userId);
+      if (!currentUser) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      //   if (mode !== "light" && mode !== "dark") {
-      //     return res.json({ error: "You need to send only light or dark theme" });
-      //   }
-      //   console.log(mode);
-      //   user.theme = mode;
-      //   console.log(user);
-      //   await user.save();
+      const followingUsers = await UserModel.find(
+        { _id: { $in: currentUser.following } },
+        { _id: 1, username: 1, profileImage: 1 } // Include only necessary fields
+      );
 
-      res.json({ user });
+      res.json({ following: followingUsers });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

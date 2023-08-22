@@ -33,5 +33,7 @@ router.patch("/change-theme/:mode", auth, userCtrl.changeTheme);
 router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
 router.post("/createPost/", auth, userCtrl.createPost);
 router.post("/createStory/", auth, userCtrl.createStory);
+router.patch("/toggelFollow/:id", auth, userCtrl.toggelFollow);
+router.get("/following/:userId", auth, userCtrl.getFollowingList);
 
 module.exports = router;
