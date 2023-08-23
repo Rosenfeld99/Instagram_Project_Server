@@ -18,17 +18,36 @@ exports.userCtrl = {
   },
   getSuggestedAccounts: async (req, res) => {
     try {
-      // משתמשים מסודרים לפי כמות העוקבים בסדר יורדי
-      const data = await UserModel.find({}, { password: 0 })
-        .sort({ followers: -1 }) // מיון עוקבים בסדר יורדי
-        .limit(15); // הגבלה ל-15 תוצאות
+      const userId = req.tokenData._id;
 
-      res.json(data);
+      // Find the user by ID
+      const user = await UserModel.findById(userId, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Find suggested accounts that the user is not already following
+      const suggestedAccounts = await UserModel.find(
+        {
+          _id: { $nin: [...user.following, userId] }, // Exclude accounts user is already following and the user itself
+        },
+        { password: 0 }
+      )
+        .sort({ followers: -1 })
+        .limit(15);
+
+      res.json(suggestedAccounts);
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });
     }
   },
+
   getUserByUserName: async (req, res) => {
     try {
       const { userName } = req.params;
@@ -292,7 +311,7 @@ exports.userCtrl = {
         password: 0,
         __v: 0,
         updatedAt: 0,
-        createdAt : 0,
+        createdAt: 0,
       });
 
       if (!currentUser) {
@@ -326,12 +345,17 @@ exports.userCtrl = {
         currentUser.following = currentUser.following.filter(
           (id) => id !== userIdToToggleFollow
         );
+        userToToggleFollow.followers = userToToggleFollow.followers.filter(
+          (id) => id.toString() !== currentUser._id.toString() // Corrected the filtering
+        );
       } else {
         // Follow the user
         currentUser.following.push(userIdToToggleFollow);
+        userToToggleFollow.followers.push(currentUser._id);
       }
 
       await currentUser.save();
+      await userToToggleFollow.save(); // Save the changes to the followed user as well
 
       res.json({ user: currentUser });
     } catch (err) {
@@ -339,21 +363,44 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+
   getFollowingList: async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const userName = req.params.userName;
+      console.log(userName);
 
-      const currentUser = await UserModel.findById(userId);
+      const currentUser = await UserModel.findOne({ username: userName }); // Use a query object to find by username
       if (!currentUser) {
         return res.status(404).json({ error: "User not found" });
       }
 
       const followingUsers = await UserModel.find(
         { _id: { $in: currentUser.following } },
-        { _id: 1, username: 1, profileImage: 1 } // Include only necessary fields
+        { _id: 1, username: 1, profileImage: 1, fullname: 1 } // Include only necessary fields
       );
 
       res.json({ following: followingUsers });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getFollowersList: async (req, res) => {
+    try {
+      const userName = req.params.userName;
+      console.log(userName);
+
+      const currentUser = await UserModel.findOne({ username: userName }); // Use a query object to find by username
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const followersUsers = await UserModel.find(
+        { _id: { $in: currentUser.followers } },
+        { _id: 1, username: 1, profileImage: 1, fullname: 1 } // Include only necessary fields
+      );
+
+      res.json({ followers: followersUsers });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

@@ -25,7 +25,7 @@ router.patch("/changeRole/:id/:role", authAdmin, adminCtrl.changeRole);
 // USER ROUTS
 router.get("/userInfo", auth, userCtrl.getUserInfo);
 router.get("/getUserByUserName/:userName", auth, userCtrl.getUserByUserName);
-router.get("/suggestedAccounts", userCtrl.getSuggestedAccounts);
+router.get("/suggestedAccounts", auth, userCtrl.getSuggestedAccounts);
 router.put("/editInfo", auth, userCtrl.editUserInfo);
 router.patch("/removeCurrentPhoto", auth, userCtrl.remodeCurrentPhoto);
 router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
@@ -34,6 +34,8 @@ router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
 router.post("/createPost/", auth, userCtrl.createPost);
 router.post("/createStory/", auth, userCtrl.createStory);
 router.patch("/toggelFollow/:id", auth, userCtrl.toggelFollow);
-router.get("/following/:userId", auth, userCtrl.getFollowingList);
+router.get("/following/:userName", auth, userCtrl.getFollowingList);
+router.get("/followers/:userName", auth, userCtrl.getFollowersList);
+// TODO remove follower from array (onclick in list in cilent)
 
 module.exports = router;
