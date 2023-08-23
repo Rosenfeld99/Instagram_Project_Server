@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String, default: "user" },
     gender: { type: String, default: "Prefer not to say" },
     theme: { type: String, default: "light" },
+    notification: { type: Number, default: 0 },
     following: [Object],
     followers: [Object],
     posts: [

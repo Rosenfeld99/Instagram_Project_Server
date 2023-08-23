@@ -3,6 +3,7 @@ const { auth, authAdmin } = require("../middlewares/auth");
 const { userCtrl } = require("../controllers/userCtrl");
 const { authCtrl } = require("../controllers/authCtrl");
 const { adminCtrl } = require("../controllers/adminCtrl");
+const { postCtrl } = require("../controllers/postCtrl");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -31,11 +32,15 @@ router.patch("/removeCurrentPhoto", auth, userCtrl.remodeCurrentPhoto);
 router.get("/check-parameter/:key/:value", userCtrl.checkParameter);
 router.patch("/change-theme/:mode", auth, userCtrl.changeTheme);
 router.patch("/updateFavs/", auth, userCtrl.upDateFavs);
-router.post("/createPost/", auth, userCtrl.createPost);
 router.post("/createStory/", auth, userCtrl.createStory);
 router.patch("/toggelFollow/:id", auth, userCtrl.toggelFollow);
 router.get("/following/:userName", auth, userCtrl.getFollowingList);
 router.get("/followers/:userName", auth, userCtrl.getFollowersList);
-// TODO remove follower from array (onclick in list in cilent)
+router.patch("/followers/removedFollower/:id", auth, userCtrl.removedFollower);
+router.patch("/resetNotifications/", auth, userCtrl.resetNotifications);
+
+// POSTS
+router.post("/createPost/", auth, userCtrl.createPost);
+router.patch("/removePost/:postId", auth, postCtrl.removePost);
 
 module.exports = router;

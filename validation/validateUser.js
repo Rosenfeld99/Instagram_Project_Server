@@ -38,6 +38,7 @@ const validateUser = (_reqBody) => {
     gender: Joi.string().allow(null || ""),
     theme: Joi.string(),
     role: Joi.string(),
+    notification: Joi.number().allow(null || ""),
     following: Joi.array().items(Joi.object()),
     followers: Joi.array().items(Joi.object()),
     posts: Joi.array().items(

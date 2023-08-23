@@ -348,10 +348,16 @@ exports.userCtrl = {
         userToToggleFollow.followers = userToToggleFollow.followers.filter(
           (id) => id.toString() !== currentUser._id.toString() // Corrected the filtering
         );
+        if (userToToggleFollow.notification > 0) {
+          userToToggleFollow.notification--;
+        }
       } else {
         // Follow the user
+        userToToggleFollow.startedFollowingAt = new Date(); // Set the timestamp
+
         currentUser.following.push(userIdToToggleFollow);
         userToToggleFollow.followers.push(currentUser._id);
+        userToToggleFollow.notification++;
       }
 
       await currentUser.save();
@@ -385,6 +391,30 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
+  resetNotifications: async (req, res) => {
+    try {
+      // Find the current user by ID
+      const user = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      // reset notification to 0
+      user.notification = 0;
+      await user.save();
+      // console.log(user);
+
+      res.json({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
   getFollowersList: async (req, res) => {
     try {
       const userName = req.params.userName;
@@ -394,6 +424,58 @@ exports.userCtrl = {
       if (!currentUser) {
         return res.status(404).json({ error: "User not found" });
       }
+
+      const followersUsers = await UserModel.find(
+        { _id: { $in: currentUser.followers } },
+        { _id: 1, username: 1, profileImage: 1, fullname: 1 } // Include only necessary fields
+      );
+
+      res.json({ followers: followersUsers });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  removedFollower: async (req, res) => {
+    const userIdDel = req.params.id;
+    try {
+      // Find the current user by ID
+      const currentUser = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
+
+      console.log(currentUser);
+      console.log(userIdDel);
+
+      const userToRemove = await UserModel.findById(userIdDel);
+      if (!userToRemove) {
+        return res.status(404).json({ error: "User to remove not found" });
+      }
+
+      // Remove the userToRemove from the currentUser's followers array
+      const updatedFollowers = currentUser.followers.filter(
+        (followerId) => followerId.toString() !== userToRemove._id.toString()
+      );
+
+      // Update the currentUser's followers array with the updatedFollowers array
+      currentUser.followers = updatedFollowers;
+      await currentUser.save();
+
+      // Remove the currentUser from userToRemove's following array
+      const updatedFollowing = userToRemove.following.filter(
+        (followingId) => followingId.toString() !== currentUser._id.toString()
+      );
+
+      // Update the userToRemove's following array with the updatedFollowing array
+      userToRemove.following = updatedFollowing;
+      await userToRemove.save();
 
       const followersUsers = await UserModel.find(
         { _id: { $in: currentUser.followers } },
