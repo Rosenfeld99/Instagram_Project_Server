@@ -85,7 +85,7 @@ router.post("/createPost", auth, async (req, res) => {
     // console.log(story);
     const myFile = req.body.images[0].url;
     if (myFile) {
-      console.log("somthing");
+      // console.log("somthing");
       // update to cloudinary
       const data = await cloudinary.uploader.upload(myFile, {
         unique_filename: true,
@@ -96,9 +96,12 @@ router.post("/createPost", auth, async (req, res) => {
       if (!user) {
         return res.json({ error: " user not found" });
       }
+      
       console.log(user);
       post.images[0].url = data.secure_url;
       user.posts.push(post);
+      // add post to grid
+      user.grid.push(post);
 
       await user.save();
       res.json({ user });

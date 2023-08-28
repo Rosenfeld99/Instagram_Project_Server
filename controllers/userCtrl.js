@@ -36,10 +36,15 @@ exports.userCtrl = {
         {
           _id: { $nin: [...user.following, userId] }, // Exclude accounts user is already following and the user itself
         },
-        { password: 0 }
+        {
+          username: 1,
+          fullname: 1,
+          profileImage: 1,
+          posts: { $slice: -3 }, // Get the last 3 posts
+        } // Projection: Include only the desired fields
       )
         .sort({ followers: -1 })
-        .limit(15);
+        .limit(10); // Limit to 3 suggested accounts
 
       res.json(suggestedAccounts);
     } catch (err) {
@@ -48,6 +53,43 @@ exports.userCtrl = {
     }
   },
 
+  // getUserByUserName: async (req, res) => {
+  //   try {
+  //     const { userName } = req.params;
+  //     const userId = req.tokenData._id;
+
+  //     // Find the user by UserName
+  //     const user = await UserModel.findOne(
+  //       { username: userName },
+  //       { password: 0 }
+  //     );
+
+  //     if (!user) {
+  //       return res.status(404).json({ error: "User not found" });
+  //     }
+
+  //     // Check if the requested user is the same as the logged-in user
+  //     const isSameUser = user._id.toString() === userId.toString();
+
+  //     if (isSameUser) {
+  //       res.json({ user, type: "personale" });
+  //     } else {
+  //       // Filtered user for other users
+  //       const filteredUser = {
+  //         ...user.toObject(),
+  //         password: undefined,
+  //         role: undefined,
+  //         adentification: undefined,
+  //         theme: undefined,
+  //         gender: undefined,
+  //       };
+  //       res.json({ user: filteredUser, type: "another" });
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //     res.status(500).json({ err });
+  //   }
+  // },
   getUserByUserName: async (req, res) => {
     try {
       const { userName } = req.params;
@@ -56,7 +98,17 @@ exports.userCtrl = {
       // Find the user by UserName
       const user = await UserModel.findOne(
         { username: userName },
-        { password: 0 }
+        {
+          _id: 1,
+          bio: 1,
+          "grid._id": 1,
+          "grid.images": 1,
+          "grid.description": 1,
+          username: 1,
+          followers: { $size: "$followers" },
+          following: { $size: "$following" },
+          profileImage: 1,
+        }
       );
 
       if (!user) {
@@ -70,15 +122,7 @@ exports.userCtrl = {
         res.json({ user, type: "personale" });
       } else {
         // Filtered user for other users
-        const filteredUser = {
-          ...user.toObject(),
-          password: undefined,
-          role: undefined,
-          adentification: undefined,
-          theme: undefined,
-          gender: undefined,
-        };
-        res.json({ user: filteredUser, type: "another" });
+        res.json({ user, type: "another" });
       }
     } catch (err) {
       console.log(err);
@@ -483,6 +527,34 @@ exports.userCtrl = {
       );
 
       res.json({ followers: followersUsers });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getFeedUser: async (req, res) => {
+    try {
+      const currentUser = await UserModel.findById(req.tokenData._id);
+
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
+
+      const followingUsers = await UserModel.find(
+        { _id: { $in: currentUser.following } },
+        { grid: 1 } // Include only the grid field
+      );
+
+      // Combine the posts from the grids of following users into a single array
+      let feedPosts = [];
+      for (const user of followingUsers) {
+        feedPosts = feedPosts.concat(user.grid);
+      }
+
+      // Sort the feedPosts array by descending order of creation date
+      feedPosts.sort((a, b) => b.createdAt - a.createdAt);
+
+      res.json({ feed: feedPosts, });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

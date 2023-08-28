@@ -42,5 +42,11 @@ router.patch("/resetNotifications/", auth, userCtrl.resetNotifications);
 // POSTS
 router.post("/createPost/", auth, userCtrl.createPost);
 router.patch("/removePost/:postId", auth, postCtrl.removePost);
+router.get("/getSinglePost/:postId/:userName", auth, postCtrl.getSinglePost);
+router.patch("/addCommentPost/:postId/:userPost", auth, postCtrl.addCommentPost);
+router.get("/commentList/:postId/:userPost", auth, postCtrl.commentList);
+
+// FEED
+router.get("/getFeedUser", auth, userCtrl.getFeedUser);
 
 module.exports = router;
