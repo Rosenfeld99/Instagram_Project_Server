@@ -65,6 +65,10 @@ router.post("/createStory", auth, async (req, res) => {
       console.log(user);
       story.url = data.secure_url;
       user.stories.push(story);
+      user.storyActive.push(story);
+      // user.storyActive.url = data.secure_url;
+      // user.storyActive.alt = story.alt;
+      // user.storyActive.created = Date.now();
 
       await user.save();
       res.json({ user });
@@ -96,9 +100,10 @@ router.post("/createPost", auth, async (req, res) => {
       if (!user) {
         return res.json({ error: " user not found" });
       }
-      
+
       console.log(user);
       post.images[0].url = data.secure_url;
+      post.userId = user._id;
       user.posts.push(post);
       // add post to grid
       user.grid.push(post);

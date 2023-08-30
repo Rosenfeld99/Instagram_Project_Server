@@ -15,6 +15,7 @@ const validatePost = (_reqBody) => {
     likes: Joi.array()
       .items(Joi.string())
       .allow(null || ""),
+    userId: Joi.string().required(),
   });
 
   return joiSchema.validate(_reqBody);

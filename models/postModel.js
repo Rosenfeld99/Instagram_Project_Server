@@ -18,6 +18,7 @@ const postModel = new mongoose.Schema({
     },
   ],
   likes: [String],
+  userId: String,
 });
 
 module.exports = postModel;

@@ -39,6 +39,20 @@ const userSchema = new mongoose.Schema(
     feed: [postModel],
     grid: [postModel],
     posts: [postModel],
+    storyActive: [
+      {
+        url: String,
+        alt: String,
+        created: { type: Date },
+      },
+    ],
+    storiesFollowing: [
+      {
+        url: String,
+        alt: String,
+        created: { type: Date },
+      },
+    ],
     highlights: [
       {
         name: String,
@@ -49,8 +63,7 @@ const userSchema = new mongoose.Schema(
       {
         url: String,
         alt: String,
-        // name: String,
-        created: { type: Date, default: Date.now },
+        created: { type: Date },
       },
     ],
     reels: [

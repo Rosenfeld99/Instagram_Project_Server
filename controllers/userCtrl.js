@@ -1,16 +1,107 @@
+const { alt } = require("joi");
 const { UserModel } = require("../models/userModel");
 const { validateEditUser } = require("../validation/validateEditUser");
 const { validatePost } = require("../validation/validatePost");
 const { validateStory } = require("../validation/validateStory");
 
 exports.userCtrl = {
+  // getUserInfo: async (req, res) => {
+  //   try {
+  //     const user = await UserModel.findOne(
+  //       { _id: req.tokenData._id },
+  //       { password: 0, __v: 0, updatedAt: 0 }
+  //     );
+  //     res.json({ user });
+  //   } catch (err) {
+  //     console.log(err);
+  //     res.status(502).json({ err });
+  //   }
+  // },
   getUserInfo: async (req, res) => {
     try {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
       const user = await UserModel.findOne(
         { _id: req.tokenData._id },
         { password: 0, __v: 0, updatedAt: 0 }
       );
+
+      // Check if the user's storyActive is older than 24 hours
+      if (user.storyActive.length > 0) {
+        user.storyActive = user.storyActive.filter(
+          (story) => story.created >= twentyFourHoursAgo
+        );
+        await user.save();
+      }
+
+      console.log(user);
+
       res.json({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getStoriesList: async (req, res) => {
+    try {
+      // Find the user by ID
+      const currentUser = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      });
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+      const followingUsersStories = await UserModel.find(
+        {
+          _id: { $in: currentUser.following },
+          "storyActive.0": { $exists: true }, // Check if there's at least one element in the storyActive array
+          "storyActive.created": { $gte: twentyFourHoursAgo },
+        },
+        { _id: 1, username: 1, profileImage: 1, storyActive: 1 }
+      );
+
+      res.json({ storiesList: followingUsersStories });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getSingleStory: async (req, res) => {
+    try {
+      const { userName, storyId } = req.params;
+      // Find the user by USERNAME
+      const currentUser = await UserModel.findOne(
+        { username: userName },
+        {
+          password: 0,
+          __v: 0,
+          updatedAt: 0,
+        }
+      );
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      // console.log(currentUser);
+
+      const single = currentUser.storyActive.filter(
+        (item) => item._id.toString() === storyId
+      );
+      const otherIds = currentUser.storyActive
+        .filter((item) => item._id.toString() !== item._id)
+        .map((item) => item._id.toString());
+
+      const resp = {
+        url: single[0].url,
+        alt: single[0].alt,
+        created: single[0].created,
+        profileImage: currentUser.profileImage,
+      };
+      res.json({ single: resp, otherIds });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });
@@ -52,44 +143,6 @@ exports.userCtrl = {
       res.status(502).json({ err });
     }
   },
-
-  // getUserByUserName: async (req, res) => {
-  //   try {
-  //     const { userName } = req.params;
-  //     const userId = req.tokenData._id;
-
-  //     // Find the user by UserName
-  //     const user = await UserModel.findOne(
-  //       { username: userName },
-  //       { password: 0 }
-  //     );
-
-  //     if (!user) {
-  //       return res.status(404).json({ error: "User not found" });
-  //     }
-
-  //     // Check if the requested user is the same as the logged-in user
-  //     const isSameUser = user._id.toString() === userId.toString();
-
-  //     if (isSameUser) {
-  //       res.json({ user, type: "personale" });
-  //     } else {
-  //       // Filtered user for other users
-  //       const filteredUser = {
-  //         ...user.toObject(),
-  //         password: undefined,
-  //         role: undefined,
-  //         adentification: undefined,
-  //         theme: undefined,
-  //         gender: undefined,
-  //       };
-  //       res.json({ user: filteredUser, type: "another" });
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //     res.status(500).json({ err });
-  //   }
-  // },
   getUserByUserName: async (req, res) => {
     try {
       const { userName } = req.params;
@@ -104,6 +157,7 @@ exports.userCtrl = {
           "grid._id": 1,
           "grid.images": 1,
           "grid.description": 1,
+          "grid.userId": 1,
           username: 1,
           followers: { $size: "$followers" },
           following: { $size: "$following" },
@@ -540,21 +594,42 @@ exports.userCtrl = {
         return res.status(404).json({ error: "Current user not found" });
       }
 
-      const followingUsers = await UserModel.find(
-        { _id: { $in: currentUser.following } },
-        { grid: 1 } // Include only the grid field
-      );
+      const followingUsers = await UserModel.find({
+        _id: { $in: currentUser.following },
+      });
 
-      // Combine the posts from the grids of following users into a single array
-      let feedPosts = [];
+      const itemsPerPage = 5; // Number of items to show per page
+      const page = req.query.page || 1; // Get the page number from query parameters
+
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = page * itemsPerPage;
+
+      const feedPosts = [];
+
       for (const user of followingUsers) {
-        feedPosts = feedPosts.concat(user.grid);
+        for (const post of user.grid) {
+          const postUser = await UserModel.findById(post.userId);
+
+          if (postUser) {
+            const postWithUserInfo = {
+              _id: post._id,
+              description: post.description,
+              profileImage: postUser.profileImage,
+              username: postUser.username,
+              images: post.images,
+            };
+            feedPosts.push(postWithUserInfo);
+          }
+        }
       }
 
       // Sort the feedPosts array by descending order of creation date
       feedPosts.sort((a, b) => b.createdAt - a.createdAt);
 
-      res.json({ feed: feedPosts, });
+      // Paginate the feedPosts array
+      const paginatedFeed = feedPosts.slice(startIndex, endIndex);
+
+      res.json({ feed: paginatedFeed });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

@@ -53,6 +53,13 @@ const validateUser = (_reqBody) => {
         likes: Joi.array().items(Joi.string()),
       })
     ),
+    storyActive: Joi.array().items(
+      Joi.object({
+        url: Joi.string().uri(),
+        alt: Joi.string(),
+        created: Joi.date(),
+      })
+    ),
     highlights: Joi.array().items(
       Joi.object({
         name: Joi.string(),
@@ -63,7 +70,14 @@ const validateUser = (_reqBody) => {
       Joi.object({
         url: Joi.string().uri(),
         alt: Joi.string(),
-        // name: Joi.string(),
+        created: Joi.date(),
+      })
+    ),
+    storiesFollowing: Joi.array().items(
+      Joi.object({
+        url: Joi.string().uri(),
+        alt: Joi.string(),
+        created: Joi.date(),
       })
     ),
     reels: Joi.array().items(

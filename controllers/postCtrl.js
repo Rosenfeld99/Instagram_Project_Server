@@ -37,33 +37,38 @@ exports.postCtrl = {
   },
   getSinglePost: async (req, res) => {
     const { postId, userName } = req.params;
-    console.log(userName);
     try {
       // Find the user by UserName
       const user = await UserModel.findOne({ username: userName });
       if (!user) {
-        return res.status(404).json({ error: "User othher post not found" });
+        return res.status(404).json({ error: "User other post not found" });
       }
 
       // Find the post by ID and verify ownership
+      let resp = {};
       const singlePost = user.grid.find(
         (item) => item._id.toString() === postId
       );
-      // console.log(user.grid);
-      // console.log(singlePost);
+
       if (!singlePost) {
         return res.status(404).json({ error: "Post not found" });
       }
 
-      (singlePost.profileImage = user.profileImage),
-        (singlePost.username = user.username),
-        console.log(singlePost);
-      res.json({ singlePost });
+      resp.images = singlePost.images;
+      resp.description = singlePost.description;
+      resp.likes = singlePost.likes.length;
+      resp._id = singlePost._id;
+      resp.username = user.username;
+      resp.profileImage = user.profileImage;
+      console.log(resp);
+
+      res.json({ singlePost: resp });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });
     }
   },
+
   addCommentPost: async (req, res) => {
     const { postId, userPost } = req.params;
     const comment = req.body.comment;
@@ -151,6 +156,81 @@ exports.postCtrl = {
       console.log(singlePost);
 
       res.json(singlePost.comments);
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  toggeliked: async (req, res) => {
+    const { postId, userName } = req.params;
+    // console.log(postId);
+
+    try {
+      // Find the current user by ID
+      const currentUser = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      // console.log(currentUser);
+
+      // Find the user to like/unlike by ID
+      const userToToggleLiked = await UserModel.findOne(
+        { username: userName },
+        {
+          password: 0,
+          __v: 0,
+          updatedAt: 0,
+          theme: 0,
+          adentification: 0,
+        }
+      );
+
+      if (!userToToggleLiked) {
+        return res.status(404).json({ error: "User to like/unlike not found" });
+      }
+
+      const post = userToToggleLiked.grid.filter(
+        (post) => post._id.toString() === postId
+      );
+
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+
+      const singlePost = post[0];
+
+      // console.log(singlePost);
+      // console.log(currentUser._id.toString());
+      const currentUserId = currentUser._id.toString();
+      // Check if the user is already being liked
+      const isLiked = singlePost.likes.includes(currentUserId);
+
+      if (isLiked) {
+        // Unlike the post
+        singlePost.likes = singlePost.likes.filter(
+          (id) => id !== currentUserId
+        );
+        if (userToToggleLiked.notification > 0) {
+          userToToggleLiked.notification--;
+        }
+      } else {
+        // liked the post
+        userToToggleLiked.startedLikedAt = new Date(); // Set the timestamp
+
+        singlePost.likes.push(currentUserId);
+        userToToggleLiked.notification++;
+      }
+
+      await currentUser.save();
+      await userToToggleLiked.save(); // Save the changes to the followed user as well
+
+      res.json({ singlePost });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });
