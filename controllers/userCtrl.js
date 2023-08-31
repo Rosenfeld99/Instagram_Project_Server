@@ -617,6 +617,8 @@ exports.userCtrl = {
               profileImage: postUser.profileImage,
               username: postUser.username,
               images: post.images,
+              likes: post.likes.length,
+              isCurrentLiked: post.likes.includes(currentUser._id),
             };
             feedPosts.push(postWithUserInfo);
           }

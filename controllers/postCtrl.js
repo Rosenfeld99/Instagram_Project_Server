@@ -38,6 +38,18 @@ exports.postCtrl = {
   getSinglePost: async (req, res) => {
     const { postId, userName } = req.params;
     try {
+      // Find the current user by ID
+      const currentUser = await UserModel.findById(req.tokenData._id, {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
+
       // Find the user by UserName
       const user = await UserModel.findOne({ username: userName });
       if (!user) {
@@ -60,7 +72,8 @@ exports.postCtrl = {
       resp._id = singlePost._id;
       resp.username = user.username;
       resp.profileImage = user.profileImage;
-      console.log(resp);
+      (resp.isCurrentLiked = singlePost.likes.includes(currentUser._id)),
+        console.log(resp);
 
       res.json({ singlePost: resp });
     } catch (err) {
@@ -230,7 +243,17 @@ exports.postCtrl = {
       await currentUser.save();
       await userToToggleLiked.save(); // Save the changes to the followed user as well
 
-      res.json({ singlePost });
+      const resp = {};
+      resp.images = singlePost.images;
+      resp.description = singlePost.description;
+      resp.likes = singlePost.likes.length;
+      resp._id = singlePost._id;
+      resp.username = userToToggleLiked.username;
+      resp.profileImage = userToToggleLiked.profileImage;
+      (resp.isCurrentLiked = singlePost.likes.includes(currentUser._id)),
+        console.log(resp);
+
+      res.json({ singlePost: resp });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });
