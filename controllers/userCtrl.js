@@ -446,8 +446,14 @@ exports.userCtrl = {
         userToToggleFollow.followers = userToToggleFollow.followers.filter(
           (id) => id.toString() !== currentUser._id.toString() // Corrected the filtering
         );
-        if (userToToggleFollow.notification > 0) {
-          userToToggleFollow.notification--;
+        if (userToToggleFollow.notifications.followersId.length > 0) {
+          userToToggleFollow.notifications.followersId =
+            userToToggleFollow.notifications.followersId.filter(
+              (id) => id.toString() !== currentUser._id.toString() // Corrected the filtering
+            );
+          if (userToToggleFollow.notifications.countNewFollowers > 0) {
+            userToToggleFollow.notifications.countNewFollowers--;
+          }
         }
       } else {
         // Follow the user
@@ -455,7 +461,8 @@ exports.userCtrl = {
 
         currentUser.following.push(userIdToToggleFollow);
         userToToggleFollow.followers.push(currentUser._id);
-        userToToggleFollow.notification++;
+        userToToggleFollow.notifications.followersId.push(currentUser._id);
+        userToToggleFollow.notifications.countNewFollowers++;
       }
 
       await currentUser.save();
@@ -503,7 +510,9 @@ exports.userCtrl = {
         return res.status(404).json({ error: "User not found" });
       }
       // reset notification to 0
-      user.notification = 0;
+      user.notifications.countNewFollowers = 0;
+      user.notifications.countNewComments = 0;
+      user.notifications.countNewLiked = 0;
       await user.save();
       // console.log(user);
 
@@ -632,6 +641,41 @@ exports.userCtrl = {
       const paginatedFeed = feedPosts.slice(startIndex, endIndex);
 
       res.json({ feed: paginatedFeed });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getNotificationList: async (req, res) => {
+    try {
+      const currentUser = await UserModel.findById(req.tokenData._id);
+
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
+
+      const newFollowers = await UserModel.find(
+        {
+          _id: { $in: currentUser.notifications.followersId },
+        },
+        { profileImage: 1, username: 1 }
+      );
+
+      const newLiked = await UserModel.find(
+        {
+          _id: { $in: currentUser.notifications.userIsLiked },
+        },
+        { profileImage: 1, username: 1 }
+      );
+
+      const newComment = await UserModel.find(
+        {
+          _id: { $in: currentUser.notifications.userIdComments },
+        },
+        { profileImage: 1, username: 1 }
+      );
+
+      res.json({ newFollowers,newLiked,newComment });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });

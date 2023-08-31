@@ -37,7 +37,10 @@ router.patch("/toggelFollow/:id", auth, userCtrl.toggelFollow);
 router.get("/following/:userName", auth, userCtrl.getFollowingList);
 router.get("/followers/:userName", auth, userCtrl.getFollowersList);
 router.patch("/followers/removedFollower/:id", auth, userCtrl.removedFollower);
+
+// NOTIFICATIONS
 router.patch("/resetNotifications/", auth, userCtrl.resetNotifications);
+router.get("/getNotificationList/", auth, userCtrl.getNotificationList);
 
 // POSTS
 router.post("/createPost/", auth, userCtrl.createPost);

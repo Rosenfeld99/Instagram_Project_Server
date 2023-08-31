@@ -81,7 +81,7 @@ exports.postCtrl = {
       res.status(502).json({ err });
     }
   },
-
+  // TODO add notofications for commnets
   addCommentPost: async (req, res) => {
     const { postId, userPost } = req.params;
     const comment = req.body.comment;
@@ -125,6 +125,8 @@ exports.postCtrl = {
       };
 
       singlePost.comments.push(newComment);
+      otherPost.notifications.countNewComments++;
+      otherPost.notifications.userIdComments.push(currentUser._id);
       await otherPost.save();
 
       res.json({ singlePost });
@@ -229,15 +231,20 @@ exports.postCtrl = {
         singlePost.likes = singlePost.likes.filter(
           (id) => id !== currentUserId
         );
-        if (userToToggleLiked.notification > 0) {
-          userToToggleLiked.notification--;
+        userToToggleLiked.notifications.userIsLiked =
+          userToToggleLiked.notifications.userIsLiked.filter(
+            (id) => id !== currentUserId
+          );
+        if (userToToggleLiked.notifications.userIsLiked.length > 0) {
+          userToToggleLiked.notifications.countNewLiked--;
         }
       } else {
         // liked the post
         userToToggleLiked.startedLikedAt = new Date(); // Set the timestamp
 
         singlePost.likes.push(currentUserId);
-        userToToggleLiked.notification++;
+        userToToggleLiked.notifications.userIsLiked.push(currentUserId);
+        userToToggleLiked.notifications.countNewLiked++;
       }
 
       await currentUser.save();
