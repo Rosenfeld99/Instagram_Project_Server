@@ -1,50 +1,58 @@
-// exports.storyCtrl = {
-//   getActiveStories: async (req, res) => {
-//     try {
-//       const currentUser = await UserModel.findById(req.tokenData._id);
-//       if (!currentUser) {
-//         return res.status(404).json({ error: "Current user not found" });
-//       }
+const { UserModel } = require("../models/userModel");
 
-//       const followingUsers = await UserModel.find({
-//         _id: { $in: currentUser.following },
-//       });
+exports.storyCtrl = {
+  getStoriesArchives: async (req, res) => {
+    try {
+      const currentUser = await UserModel.findById(req.tokenData._id);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
 
-//       const itemsPerPage = 5; // Number of items to show per page
-//       const page = req.query.page || 1; // Get the page number from query parameters
+      const page = req.query.page || 1; // Get the requested page from the query parameter (default to page 1)
+      const limit = 10; // Set the limit per page to 10
+      const startIndex = (page - 1) * limit; // Calculate the starting index for the current page
+      const endIndex = page * limit; // Calculate the ending index for the current page
+      const storiesList = currentUser.stories.slice(startIndex, endIndex);
 
-//       const startIndex = (page - 1) * itemsPerPage;
-//       const endIndex = page * itemsPerPage;
+      res.json({
+        storiesList,
+        currentPage: page,
+        totalPages: Math.ceil(currentUser.stories.length / limit),
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  AddHightlight: async (req, res) => {
+    try {
+      const newHighlight = req.body;
+      console.log(newHighlight);
+      const currentUser = await UserModel.findById(req.tokenData._id);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
 
-//       const feedPosts = [];
+      currentUser.highlights.push(newHighlight);
+      await currentUser.save();
 
-//       for (const user of followingUsers) {
-//         for (const post of user.grid) {
-//           const postUser = await UserModel.findById(post.userId);
+      res.json({ highlights: currentUser.highlights });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+  getHightlightList: async (req, res) => {
+    try {
+      const currentUser = await UserModel.findById(req.tokenData._id);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Current user not found" });
+      }
 
-//           if (postUser) {
-//             const postWithUserInfo = {
-//               _id: post._id,
-//               description: post.description,
-//               profileImage: postUser.profileImage,
-//               username: postUser.username,
-//               images: post.images,
-//             };
-//             feedPosts.push(postWithUserInfo);
-//           }
-//         }
-//       }
-
-//       // Sort the feedPosts array by descending order of creation date
-//       feedPosts.sort((a, b) => b.createdAt - a.createdAt);
-
-//       // Paginate the feedPosts array
-//       const paginatedFeed = feedPosts.slice(startIndex, endIndex);
-
-//       res.json({ feed: paginatedFeed });
-//     } catch (err) {
-//       console.log(err);
-//       res.status(502).json({ err });
-//     }
-//   },
-// };
+      res.json({ hightlightList: currentUser.highlights });
+    } catch (err) {
+      console.log(err);
+      res.status(502).json({ err });
+    }
+  },
+};

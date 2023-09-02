@@ -4,6 +4,7 @@ const { userCtrl } = require("../controllers/userCtrl");
 const { authCtrl } = require("../controllers/authCtrl");
 const { adminCtrl } = require("../controllers/adminCtrl");
 const { postCtrl } = require("../controllers/postCtrl");
+const { storyCtrl } = require("../controllers/storyCtrl");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -46,8 +47,16 @@ router.get("/getNotificationList/", auth, userCtrl.getNotificationList);
 router.post("/createPost/", auth, userCtrl.createPost);
 router.patch("/removePost/:postId", auth, postCtrl.removePost);
 router.get("/getSinglePost/:postId/:userName", auth, postCtrl.getSinglePost);
-router.patch("/addCommentPost/:postId/:userPost", auth, postCtrl.addCommentPost);
-router.patch("/addCommentPost/:postId/:userPost", auth, postCtrl.addCommentPost);
+router.patch(
+  "/addCommentPost/:postId/:userPost",
+  auth,
+  postCtrl.addCommentPost
+);
+router.patch(
+  "/addCommentPost/:postId/:userPost",
+  auth,
+  postCtrl.addCommentPost
+);
 router.get("/commentList/:postId/:userPost", auth, postCtrl.commentList);
 router.patch("/toggeliked/:postId/:userName", auth, postCtrl.toggeliked);
 
@@ -58,5 +67,8 @@ router.get("/getFeedUser", auth, userCtrl.getFeedUser);
 // router.post("/addStory/:userId", auth, postCtrl.addCommentPost);
 router.get("/singleStoy/:userName/:storyId", auth, userCtrl.getSingleStory);
 router.get("/getStoriesList/", auth, userCtrl.getStoriesList);
+router.get("/getStoriesArchives/", auth, storyCtrl.getStoriesArchives);
+router.post("/AddHightlight/", auth, storyCtrl.AddHightlight);
+router.get("/getHightlightList/", auth, storyCtrl.getHightlightList);
 
 module.exports = router;

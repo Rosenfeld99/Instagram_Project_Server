@@ -67,8 +67,9 @@ const validateUser = (_reqBody) => {
     ),
     highlights: Joi.array().items(
       Joi.object({
-        name: Joi.string(),
-        url: Joi.string().uri(),
+        name: Joi.string().required(),
+        url: Joi.string().uri().required(),
+        alt: Joi.string().required(),
       })
     ),
     stories: Joi.array().items(

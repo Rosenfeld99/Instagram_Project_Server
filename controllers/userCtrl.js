@@ -162,6 +162,7 @@ exports.userCtrl = {
           followers: { $size: "$followers" },
           following: { $size: "$following" },
           profileImage: 1,
+          highlights: 1,
         }
       );
 
@@ -675,7 +676,7 @@ exports.userCtrl = {
         { profileImage: 1, username: 1 }
       );
 
-      res.json({ newFollowers,newLiked,newComment });
+      res.json({ newFollowers, newLiked, newComment });
     } catch (err) {
       console.log(err);
       res.status(502).json({ err });
