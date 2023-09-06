@@ -72,6 +72,13 @@ exports.postCtrl = {
       resp._id = singlePost._id;
       resp.username = user.username;
       resp.profileImage = user.profileImage;
+      const usersPromises = singlePost.likes.slice(-3).map(async (userId) => {
+        const user = await UserModel.findById(userId);
+        return user ? { _id: user._id, profileImage: user.profileImage } : null;
+      });
+
+      resp.threeUserLiked = await Promise.all(usersPromises);
+
       (resp.isCurrentLiked = singlePost.likes.includes(currentUser._id)),
         console.log(resp);
 

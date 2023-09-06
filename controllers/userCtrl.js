@@ -621,6 +621,13 @@ exports.userCtrl = {
           const postUser = await UserModel.findById(post.userId);
 
           if (postUser) {
+            const usersPromises = post.likes.slice(-3).map(async (userId) => {
+              const user = await UserModel.findById(userId);
+              return user
+                ? { _id: user._id, profileImage: user.profileImage }
+                : null;
+            });
+            const threeUserLiked = await Promise.all(usersPromises);
             const postWithUserInfo = {
               _id: post._id,
               description: post.description,
@@ -629,6 +636,7 @@ exports.userCtrl = {
               images: post.images,
               likes: post.likes.length,
               isCurrentLiked: post.likes.includes(currentUser._id),
+              threeUserLiked: threeUserLiked,
             };
             feedPosts.push(postWithUserInfo);
           }
