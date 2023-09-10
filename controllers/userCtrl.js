@@ -624,7 +624,11 @@ exports.userCtrl = {
             const usersPromises = post.likes.slice(-3).map(async (userId) => {
               const user = await UserModel.findById(userId);
               return user
-                ? { _id: user._id, profileImage: user.profileImage }
+                ? {
+                    _id: user._id,
+                    profileImage: user.profileImage,
+                    username: user.username,
+                  }
                 : null;
             });
             const threeUserLiked = await Promise.all(usersPromises);

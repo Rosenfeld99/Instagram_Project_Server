@@ -2,7 +2,7 @@ const { UserModel } = require("../models/userModel");
 
 exports.postCtrl = {
   removePost: async (req, res) => {
-    const postId = req.params.postId;
+    const {postId} = req.params;
     try {
       // Find the current user by ID
       const user = await UserModel.findById(req.tokenData._id, {
@@ -36,7 +36,7 @@ exports.postCtrl = {
     }
   },
   getSinglePost: async (req, res) => {
-    const { postId, userName } = req.params;
+    const { userName,postId } = req.params;
     try {
       // Find the current user by ID
       const currentUser = await UserModel.findById(req.tokenData._id, {
@@ -74,7 +74,13 @@ exports.postCtrl = {
       resp.profileImage = user.profileImage;
       const usersPromises = singlePost.likes.slice(-3).map(async (userId) => {
         const user = await UserModel.findById(userId);
-        return user ? { _id: user._id, profileImage: user.profileImage } : null;
+        return user
+          ? {
+              _id: user._id,
+              profileImage: user.profileImage,
+              username: user.username,
+            }
+          : null;
       });
 
       resp.threeUserLiked = await Promise.all(usersPromises);
